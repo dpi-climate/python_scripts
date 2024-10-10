@@ -5,10 +5,15 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 # Coordinates for the bounding box
-lat_top_left = 45.96515752022081
-lon_top_left = -124.37257188287798
-lat_bottom_right = 34.0336856583888
+lat_top_left = 45.97
+lon_top_left = -124.37
+lat_bottom_right = 34.03
 lon_bottom_right = -87.21894471194958
+
+# lat_top_left = 42.510225759855686
+# lon_top_left = -88.83649485961635
+# lat_bottom_right = 41.30775734879674
+# lon_bottom_right = -87.54692281997878
 
 # Path to your NetCDF file
 path = "C:/Users/carolvfs/Documents/data/HRRR_2024092300_2024092723"
@@ -35,6 +40,10 @@ mask = (
 masked_latitudes = latitudes[mask]
 masked_longitudes = longitudes[mask]
 
+# Chicago coordinates
+chicago_lat = 41.8781
+chicago_lon = -87.6298
+
 # Plotting the masked points using Cartopy
 plt.figure(figsize=(10, 6))
 
@@ -47,7 +56,10 @@ ax.add_feature(cfeature.BORDERS)
 ax.add_feature(cfeature.STATES, edgecolor='gray')
 
 # Plot the masked points
-plt.scatter(masked_longitudes, masked_latitudes, color='red', s=10, label='Masked Points', transform=ccrs.PlateCarree())
+plt.scatter(masked_longitudes, masked_latitudes, color='red', s=8, label='Masked Points', transform=ccrs.PlateCarree())
+
+# Plot Chicago as a text label near the city's location
+ax.text(chicago_lon, chicago_lat, 'Chicago', transform=ccrs.PlateCarree(), fontsize=12, verticalalignment='bottom', color='blue')
 
 # Set extent to the bounding box area
 ax.set_extent([lon_top_left, lon_bottom_right, lat_bottom_right, lat_top_left])
@@ -55,6 +67,9 @@ ax.set_extent([lon_top_left, lon_bottom_right, lat_bottom_right, lat_top_left])
 # Add title and legend
 plt.title('Masked Points in the Bounding Box')
 plt.legend()
+
+# Save the plot as a PNG file
+plt.savefig('sf-chicago.png', format='png', dpi=300)
 
 # Show the plot
 plt.show()
