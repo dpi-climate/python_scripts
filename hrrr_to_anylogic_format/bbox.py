@@ -1,6 +1,7 @@
-from support import build_mask, mask_variable, kelvin_to_celsius, write_results
+from support import build_mask, mask_variable, kelvin_to_celsius
 import pandas as pd
 import numpy as np
+from netCDF4 import Dataset
 
 lat_top_left = 45.96515752022081
 lon_top_left = -124.37257188287798
@@ -46,20 +47,27 @@ while ti <= 103:
         active_date_str = active_date.strftime('%Y%m%d%H')
         
         ncfile = f"{path}/{active_date_str}.nc"
+        dataset = Dataset(ncfile)
         # print(ncfile)
         
         if not isinstance(mask, np.ndarray):
-            mask, latitudes, longitudes = build_mask(ncfile, lat_name, lon_name, lat_top_left, lon_top_left, lat_bottom_right, lon_bottom_right)
+            mask, latitudes, longitudes = build_mask(dataset, lat_name, lon_name, lat_top_left, lon_top_left, lat_bottom_right, lon_bottom_right)
 
             for lat, lon in zip(latitudes[mask], longitudes[mask]):
                 points.append([lat, lon])
             
-        masked_variable = mask_variable(ncfile, mask, var_name)
+        masked_variable = mask_variable(dataset, mask, var_name)
         masked_variable = kelvin_to_celsius(masked_variable)
 
         avg_array.append(masked_variable)
 
-    avg = np.mean(np.stack(avg_array), axis=0)  
+    dataset.close()
+    
+    avg = np.mean(np.stack(avg_array), axis=0)
+
+    for lat, lon, var_value in zip(latitudes[mask], longitudes[mask], avg[mask]):
+        data.append([lat, lon, var_value, dates, new_format_timestamp])
+
     avg_array = []
 
     date_i += pd.Timedelta(hours=interval)
@@ -72,5 +80,9 @@ while ti <= 103:
 
     new_t += 1
 
-    write_results(data, ["latitude", "longitude", "value", "datetime", "timestamp"], "temperature.csv")
-    write_results(points, ["latitude", "longitude"], "points.csv")
+df = pd.DataFrame(data, columns=["latitude", "longitude", "value", "datetime", "timestamp"])
+df.to_csv("temperature.csv", index=False)
+
+df = pd.DataFrame(points, columns=["latitude", "longitude"])
+df.to_csv("points.csv", index=False)
+
